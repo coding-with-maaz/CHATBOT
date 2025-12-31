@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  chatbot-api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatbot-api-prod
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - AI_PROVIDER=${AI_PROVIDER}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+      - GEMINI_MODEL=${GEMINI_MODEL}
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=False
+      - LOG_LEVEL=INFO
+    env_file:
+      - .env.production
+    restart: always
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - chatbot-network-prod
+
+  # For production, you might use MongoDB Atlas or a managed service
+  # Remove mongodb service if using external MongoDB
+
+networks:
+  chatbot-network-prod:
+    driver: bridge
